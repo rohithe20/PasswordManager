@@ -1,7 +1,7 @@
 import javax.crypto.*;
 import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.SecretKeySpec;
-import java.io.File;
+import java.io.*;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
@@ -30,7 +30,7 @@ public class Main {
             while (!correctPassword){
                 System.out.println("Please enter the passcode to access your passwords:");
                 String userEnteredPassword = scanner.nextLine();
-                if (verifyPassword(userEnteredPassword)){
+                if (verifyPassword(userEnteredPassword, file)){
                     correctPassword = true;
                 }else{
                     System.out.println("Wrong password entered");
@@ -51,18 +51,18 @@ public class Main {
             SecureRandom random = new SecureRandom();
             byte[] salt = new byte[16];
             random.nextBytes(salt);
-
-            try {
-                KeySpec spec = new PBEKeySpec(userEnteredPassword.toCharArray(), salt, 600000, 128);
-                SecretKeyFactory factory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256");
-                SecretKey sharedKey = factory.generateSecret(spec);
-                byte[] encoded = sharedKey.getEncoded();
-            } catch (Exception e) {
-                System.out.println("Error in encoding ");
-            }
-
             String base64Salt = Base64.getEncoder().encodeToString(salt);
 
+            // DO SOMETHING WITH THE PASSWORD. HASH OR ENCRYPT? NOT CLEAR. ASK BRIAN
+
+            String base64Password = Base64.getEncoder().encodeToString(userEnteredPassword.getBytes());
+            try {
+                FileWriter fileWriter = new FileWriter("secrets.txt");
+                fileWriter.write(base64Salt + ":" + base64Password);
+                fileWriter.close();
+            }catch (Exception e){
+                System.out.println("Cannot write to file");
+            }
 
         }
         // The main loop
@@ -100,12 +100,22 @@ public class Main {
 
 
 
-    private static boolean verifyPassword(String userEnteredPassword){
+    private static boolean verifyPassword(String userEnteredPassword, File file) {
         // Hash the salt + password and compare it to the hash stored in the secrets file
-        String storedHash = "";
-        String userHash = "";
+        try {
+            BufferedReader br = new BufferedReader(new FileReader(file));
+            String storedSecret = br.readLine();
+            String[] split = storedSecret.split(":");
+            String base64Salt = split[0];
+            String base64Password = split[1];
 
-        return storedHash.equals(userHash);
+            // DO SOME LOGIC BETWEEN THE STORED INFORMATION AND THE USER ENTERED PASSWORD.
+
+            return true;
+        } catch (Exception e) {
+            System.out.println("Issue verifying password");
+        }
+        return false;
     }
 
     private static File getPasswordFile(){
