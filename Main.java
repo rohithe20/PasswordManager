@@ -1,3 +1,5 @@
+package PasswordManager;
+
 import javax.crypto.Cipher;
 import javax.crypto.SecretKey;
 import javax.crypto.SecretKeyFactory;
@@ -77,9 +79,9 @@ public class Main {
             String encryptedToken = encrypt(hashPassword(salt, userEnteredPassword),"hello");
 
             assert encryptedToken != null;
-            String base64EncryptedToken = Base64.getEncoder().encodeToString(encryptedToken.getBytes());
+            //String base64EncryptedToken = Base64.getEncoder().encodeToString(encryptedToken.getBytes());
             try {
-                addSaltAndToken(base64Salt, base64EncryptedToken);
+                addSaltAndToken(base64Salt, encryptedToken);
             }catch (Exception e){
                 System.out.println("Cannot write to file");
             }
@@ -111,9 +113,11 @@ public class Main {
                 String label = scanner.nextLine();
                 byte[] encryptedPassword = getStoredPassword(label);
                 // decrypt the password
-                assert encryptedPassword != null;
-                String decryptedPassword = decrypt(encryptionKey, new String(encryptedPassword));
-                System.out.println(decryptedPassword);
+                //System.out.println(encryptedPassword);
+                if(encryptedPassword != null) {
+                    String decryptedPassword = decrypt(encryptionKey, new String(encryptedPassword));
+                    System.out.println(decryptedPassword);
+                }
             }else if (userChoice.equals("q")){
                 // Quit
                 System.out.println("Quitting");
@@ -178,7 +182,8 @@ public class Main {
             byte [] decrypted = cipher.doFinal(decoded);
             return new String(decrypted);
         }catch (Exception e){
-            System.out.println("Issues decrypting password");
+            e.printStackTrace();
+            //System.out.println("Issues decrypting password");
         }
         return null;
 
@@ -232,7 +237,7 @@ public class Main {
                 String lineLabel = labelAndPassword[0];
                 String base64Password = labelAndPassword[1];
                 if (lineLabel.equals(label)){
-                    return Base64.getDecoder().decode(base64Password);
+                    return base64Password.getBytes();
                 }
             }
             System.out.println("This label/password pair does not exist on record");
@@ -282,6 +287,7 @@ public class Main {
             String[] keyValPair = null;
             String line = br.readLine();
             int lineNumber = 1;
+            boolean deleted = false;
 
             while(line!= null) {
                 keyValPair = line.split(":");
@@ -291,12 +297,15 @@ public class Main {
                     // The password will have to be encrypted. Here 'password' is assumed to be encrypted and in base64
 
                     deleteLine(label, file.getPath(), password);
+                    deleted = true;
                 }
                 line = br.readLine();
                 lineNumber++;
             }
-            bw.write(label+":"+password);
             bw.newLine();
+            if (!deleted) {
+                bw.write(label+":"+password);
+            }
             br.close();
             bw.close();
 
