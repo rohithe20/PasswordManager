@@ -1,3 +1,4 @@
+
 package PasswordManager;
 
 import javax.crypto.Cipher;
@@ -182,7 +183,7 @@ public class Main {
             byte [] decrypted = cipher.doFinal(decoded);
             return new String(decrypted);
         }catch (Exception e){
-            e.printStackTrace();
+            //e.printStackTrace();
             //System.out.println("Issues decrypting password");
         }
         return null;
@@ -233,11 +234,14 @@ public class Main {
             BufferedReader br = new BufferedReader(fr);
             String line;
             while((line = br.readLine()) != null){
-                String[] labelAndPassword = line.split(":");
-                String lineLabel = labelAndPassword[0];
-                String base64Password = labelAndPassword[1];
-                if (lineLabel.equals(label)){
-                    return base64Password.getBytes();
+                if(!line.equals("")) {
+
+                    String[] labelAndPassword = line.split(":");
+                    String lineLabel = labelAndPassword[0];
+                    String base64Password = labelAndPassword[1];
+                    if (lineLabel.equals(label)) {
+                        return base64Password.getBytes();
+                    }
                 }
             }
             System.out.println("This label/password pair does not exist on record");
@@ -316,3 +320,4 @@ public class Main {
     }
 
 }
+
